@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Защита проекта — Учим ноты</title>
+<style>
+:root{--bg:#0B0E14;--p:#121826;--l:#232C44;--tx:#E8ECF8;--mu:#8B94B3;--v:#7C5CFF;--g:#00E5A8;--a:#FFB454;--r:#FF6B8B;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:system-ui,Inter,Arial,sans-serif;overflow:hidden}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(600px 400px at 85% 10%,rgba(124,92,255,.22),transparent),radial-gradient(500px 400px at 10% 90%,rgba(0,229,168,.14),transparent),linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px;pointer-events:none}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.deck{position:absolute;inset:0}
+.slide{position:absolute;inset:0;padding:clamp(12px,3vw,40px) clamp(12px,3vw,40px) 76px;overflow-y:auto;display:flex;flex-direction:column;justify-content:center;opacity:0;visibility:hidden;transform:translateX(70px) scale(.97);filter:blur(10px);transition:opacity .7s,transform .7s cubic-bezier(.2,.8,.2,1),filter .7s,visibility .7s}
+.slide.on{opacity:1;visibility:visible;transform:none;filter:none}
+.slide.past{transform:translateX(-70px) scale(.97)}
+.r{opacity:0;transform:translateY(22px);transition:opacity .6s,transform .6s;transition-delay:calc(var(--i,0)*.12s + .3s)}
+.on .r{opacity:1;transform:none}
+.win{max-width:1060px;margin:auto;width:100%;background:rgba(18,24,38,.92);border:1px solid var(--l);border-radius:16px;box-shadow:0 20px 80px rgba(124,92,255,.22)}
+.bar{display:flex;align-items:center;gap:7px;padding:11px 16px;border-bottom:1px solid var(--l);color:var(--mu);font-size:13px}
+.bar i{width:11px;height:11px;border-radius:50%;background:var(--r)}.bar i:nth-child(2){background:var(--a)}.bar i:nth-child(3){background:var(--g)}.bar span{margin-left:8px}
+.body{padding:clamp(16px,3.5vw,40px)}
+h1{font-size:clamp(40px,9vw,92px);margin:0 0 12px;line-height:1;background:linear-gradient(90deg,var(--v),var(--g));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:clamp(24px,4.2vw,44px);margin:0 0 20px;line-height:1.15}
+h2::before{content:"$ ";color:var(--g);font-family:ui-monospace,Menlo,monospace}
+.cur::after{content:"▍";color:var(--g);animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.sub{color:var(--mu);font-size:clamp(16px,2.4vw,24px);margin:0 0 18px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.c{background:rgba(255,255,255,.035);border:1px solid var(--l);border-radius:14px;padding:16px 18px;transition:.25s}
+.c:hover{border-color:var(--v);box-shadow:0 0 24px rgba(124,92,255,.35);transform:translateY(-3px)}
+.c b{color:var(--a);display:block;margin-bottom:6px;font-size:18px}.c p,.c li{margin:0;color:#C5CBE3;font-size:16px;line-height:1.45}.c ul{margin:0;padding-left:18px}
+.tag{display:inline-block;padding:3px 10px;border:1px solid var(--g);color:var(--g);border-radius:99px;font-size:13px;margin-bottom:14px}
+.flow{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.node{text-align:center;padding:18px 20px;min-width:150px}.node big{font-size:44px;display:block}
+.arr{color:var(--g);font-size:30px;animation:nx 1.4s infinite}
+@keyframes nx{50%{transform:translateX(8px);opacity:.5}}
+.eq{display:flex;gap:4px;height:44px;align-items:flex-end;justify-content:center}.eq i{width:6px;background:var(--g);border-radius:3px;animation:eq 1s infinite ease-in-out}
+@keyframes eq{0%,100%{height:8px}50%{height:42px}}
+.note-big{font-size:clamp(48px,10vw,88px);font-weight:800;color:var(--a);line-height:1}
+input[type=range]{width:100%;accent-color:var(--v);height:32px}
+button{font:inherit;color:var(--tx);background:var(--l);border:1px solid #33406a;border-radius:12px;padding:10px 16px;cursor:pointer;transition:.2s}
+button:hover{background:var(--v);border-color:var(--v)}button.on2{background:var(--v)}
+.keys{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:12px 0}.keys button{padding:12px 0}
+svg.st{width:100%;max-width:340px;height:auto;display:block;margin:0 auto}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;align-items:center}
+pre{margin:0;font-size:clamp(12px,1.7vw,17px);line-height:1.6;overflow-x:auto;color:#E6E8F5}
+.ln{display:block;opacity:0;animation:ln .4s forwards;animation-delay:calc(var(--i)*.09s)}@keyframes ln{to{opacity:1}}
+.k{color:var(--a)}.s{color:var(--g)}.cm{color:#7A83A6}
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.num{font-size:clamp(38px,7vw,64px);font-weight:800;color:var(--g)}
+details{background:rgba(255,255,255,.035);border:1px solid var(--l);border-radius:14px;padding:14px 18px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:700;color:var(--a);font-size:18px}details p{margin:10px 0 0;color:#C5CBE3;line-height:1.5}
+.nav{position:fixed;left:0;right:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;align-items:center;gap:14px;z-index:5}
+.nav button{border-radius:99px;width:44px;height:44px;padding:0;font-size:20px}
+.prog{position:fixed;top:env(safe-area-inset-top,0px);left:0;height:3px;background:linear-gradient(90deg,var(--v),var(--g));width:0;transition:width .6s;z-index:6}
+.fl{position:fixed;font-size:28px;color:var(--v);opacity:.35;animation:fl 9s linear infinite;pointer-events:none}
+@keyframes fl{from{transform:translateY(105vh) rotate(0)}to{transform:translateY(-12vh) rotate(40deg)}}
+[contenteditable]{border-bottom:1px dashed var(--g);outline:0;color:var(--g)}
+</style>
+</head>
+<body>
+<div class="prog" id="prog"></div>
+<span class="fl" style="left:8%;animation-delay:0s">♪</span><span class="fl" style="left:30%;animation-delay:-3s">♫</span><span class="fl" style="left:62%;animation-delay:-6s">♩</span><span class="fl" style="left:88%;animation-delay:-2s">♬</span>
+<div class="deck" id="deck">
+
+<section class="slide">
+<div class="win"><div class="bar mono"><i></i><i></i><i></i><span>main.py — защита проекта</span></div>
+<div class="body"><span class="tag mono r" style="--i:0">// защита проекта</span>
+<h1 class="r" style="--i:1">Учим ноты</h1>
+<p class="sub r" style="--i:2">Приложение, которое слушает, как ты играешь, и учит читать ноты</p>
+<p class="mono r cur" style="--i:3;color:var(--mu)">автор: <span contenteditable="true" spellcheck="false">Егоров Владимир</span> </p>
+<p class="mono r" style="--i:4;color:var(--mu);font-size:13px">→ листай стрелками, кнопками или свайпом</p></div></div>
+</section>
+
+<section class="slide">
+<div class="win"><div class="bar mono"><i></i><i></i><i></i><span>01_problem_goal.md</span></div><div class="body">
+<h2 class="r" style="--i:0">Проблема и цель</h2>
+<div class="g">
+<div class="c r" style="--i:1"><b>Проблема</b><ul><li>Ноты кажутся сложными</li><li>Без учителя нет обратной связи</li><li>Обычные уроки быстро надоедают</li></ul></div>
+<div class="c r" style="--i:2"><b>Цель</b><p>Сделать приложение, которое помогает выучить ноты с помощью телефона.</p></div>
+<div class="c r" style="--i:3"><b>Задачи</b><ul><li>Понять, как звук становится нотой</li><li>Сделать определение ноты по микрофону</li><li>Добавить режим обучения</li></ul></div>
+</div></div></div>
+</section>
+
+<section class="slide">
+<div class="win"><div class="bar mono"><i></i><i></i><i></i><span>02_how_it_works.md</span></div><div class="body">
+<h2 class="r" style="--i:0">Как это работает</h2>
+<div class="flow">
+<div class="c node r" style="--i:1"><big>🎤</big><b>Микрофон</b><p>слушает звук</p></div><span class="arr">➜</span>
+<div class="c node r" style="--i:2"><div class="eq"><i></i><i style="animation-delay:.15s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.45s"></i><i style="animation-delay:.6s"></i></div><b>Частота</b><p>находим Гц</p></div><span class="arr">➜</span>
+<div class="c node r" style="--i:3"><big>🎼</big><b>Нота</b><p>показываем на стане</p></div>
+</div></div></div>
+</section>
+
+<section class="slide">
+<div class="win"><div class="bar mono"><i></i><i></i><i></i><span>03_try_it.live</span></div><div class="body">
+<h2 class="r" style="--i:0">Покрути частоту</h2>
+<div class="two r" style="--i:1"><div>
+<div class="note-big" id="kn">Ля</div><div class="mono" id="kf" style="color:var(--mu);margin:8px 0">440 Гц</div>
+<div class="mono" id="kc" style="color:var(--g)">точно</div></div>
+<svg class="st" id="kst" viewBox="0 0 300 150"></svg></div>
+<input class="r" style="--i:2" type="range" id="kr" min="57" max="84" step="0.01" value="69" aria-label="Частота">
+<button class="r" style="--i:3" id="kp">▶ Послушать звук</button>
+</div></div>
+</section>
+
+<section class="slide">
+<div class="win"><div class="bar mono"><i></i><i></i><i></i><span id="cf">index.html</span></div><div class="body">
+<h2 class="r" style="--i:0">Как это написано</h2>
+<div class="tabs r" style="--i:1" id="ct"></div>
+<pre class="mono" id="cd"></pre></div></div>
+</section>
+
+<section class="slide">
+<div class="win"><div class="bar mono"><i></i><i></i><i></i><span>04_quiz.live</span></div><div class="body">
+<h2 class="r" style="--i:0">Проверь себя: какая нота?</h2>
+<svg class="st r" style="--i:1" id="qst" viewBox="0 0 300 150"></svg>
+<div class="keys r" style="--i:2" id="qk"></div>
+<div class="mono" style="text-align:center"><span id="qm" style="font-weight:700"></span> <span id="qs" style="color:var(--mu)">Счёт: 0 из 0</span></div>
+</div></div>
+</section>
+
+<section class="slide">
+<div class="win"><div class="bar mono"><i></i><i></i><i></i><span>05_results.md</span></div><div class="body">
+<h2 class="r" style="--i:0">Что получилось</h2>
+<div class="g" style="margin-bottom:16px">
+<div class="c r" style="--i:1"><div class="num" data-t="12">0</div><p>нот определяет</p></div>
+<div class="c r" style="--i:2"><div class="num" data-t="2">0</div><p>режима: слушать и учить</p></div>
+<div class="c r" style="--i:3"><div class="num" data-t="1">0</div><p>файл с кодом</p></div>
+<div class="c r" style="--i:4"><div class="num" data-t="0">0</div><p>серверов нужно</p></div></div>
+<div class="g"><div class="c r" style="--i:5"><p>✔ Узнаёт ноту по звуку в реальном времени</p></div><div class="c r" style="--i:6"><p>✔ Работает в браузере на телефоне и ПК</p></div><div class="c r" style="--i:7"><p>✔ Учит нотам и сразу проверяет ответ</p></div></div>
+</div></div>
+</section>
+
+<section class="slide">
+<div class="win"><div class="bar mono"><i></i><i></i><i></i><span>06_questions.md</span></div><div class="body">
+<h2 class="r" style="--i:0">Вопросы комиссии</h2>
+<div class="r" style="--i:1">
+<details><summary>Как приложение понимает ноту?</summary><p>Микрофон записывает звук, программа находит частоту (по повторению сигнала) и по формуле 69 + 12·log₂(f/440) выбирает ближайшую ноту.</p></details>
+<details><summary>Что, если вокруг шумно?</summary><p>Слишком тихие звуки приложение игнорирует. Лучше играть рядом с микрофоном. Фильтрацию шума можно добавить дальше.</p></details>
+<details><summary>Чем это лучше тюнера?</summary><p>Тюнер только показывает ноту. Здесь есть ещё нотный стан и режим обучения с проверкой ответа.</p></details>
+<details><summary>Что можно улучшить?</summary><p>Уроки по уровням, больше октав, сохранение прогресса и версия для магазинов приложений.</p></details>
+</div></div></div>
+</section>
+
+<section class="slide">
+<div class="win"><div class="bar mono"><i></i><i></i><i></i><span>07_thanks.md</span></div><div class="body" style="text-align:center">
+<h2 class="r" style="--i:0">Выводы</h2>
+<div class="g" style="text-align:left;margin-bottom:22px">
+<div class="c r" style="--i:1"><p>Цель достигнута: приложение учит нотам с помощью телефона.</p></div>
+<div class="c r" style="--i:2"><p>Работает без установки и без серверов.</p></div>
+<div class="c r" style="--i:3"><p>Дальше: уроки, прогресс и мобильная версия.</p></div></div>
+<h1 class="r" style="--i:4">Спасибо!</h1><p class="sub r" style="--i:5">Готов ответить на вопросы</p></div></div>
+</section>
+</div>
+
+<div class="nav"><button id="pv" aria-label="Назад">‹</button><span class="mono" id="ct2" style="color:var(--mu)">1 / 9</span><button id="nx" aria-label="Вперёд">›</button></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const NM=['До','До♯','Ре','Ре♯','Ми','Фа','Фа♯','Соль','Соль♯','Ля','Ля♯','Си'],NT=[0,2,4,5,7,9,11],NN=['До','Ре','Ми','Фа','Соль','Ля','Си'],DI=[0,0,1,1,2,3,3,4,4,5,5,6];
+function staff(el,midi){let s='';const L=30,R=280,b=100,h=8,x=160;
+ for(let i=0;i<5;i++)s+=`<line x1="${L}" x2="${R}" y1="${b-i*16}" y2="${b-i*16}" stroke="#8B94B3" stroke-width="1.5"/>`;
+ const dn=(Math.floor(midi/12)-1)*7+DI[midi%12],pos=dn-30,y=b-pos*h;
+ for(let p=-2;p>=pos;p-=2)s+=`<line x1="${x-18}" x2="${x+18}" y1="${b-p*h}" y2="${b-p*h}" stroke="#8B94B3" stroke-width="1.5"/>`;
+ for(let p=10;p<=pos;p+=2)s+=`<line x1="${x-18}" x2="${x+18}" y1="${b-p*h}" y2="${b-p*h}" stroke="#8B94B3" stroke-width="1.5"/>`;
+ s+=`<ellipse cx="${x}" cy="${y}" rx="11" ry="8" fill="#FFB454" transform="rotate(-18 ${x} ${y})"/><line x1="${x+10}" x2="${x+10}" y1="${y}" y2="${y-44}" stroke="#FFB454" stroke-width="3"/>`;
+ if([1,3,6,8,10].includes(midi%12))s+=`<text x="${x-40}" y="${y+8}" font-size="26" fill="#FFB454">♯</text>`;
+ el.innerHTML=s;}
+// слайд 4: крутилка
+let ac,osc,on=false;
+function knob(){const m=+$('kr').value,f=440*Math.pow(2,(m-69)/12),r=Math.round(m),c=(m-r)*100;
+ $('kn').textContent=NM[r%12];$('kf').textContent=f.toFixed(1).replace('.',',')+' Гц';
+ $('kc').textContent=Math.abs(c)<8?'точно':(c>0?'чуть выше ▲ ':'чуть ниже ▼ ')+Math.abs(c).toFixed(0)+' центов';
+ $('kc').style.color=Math.abs(c)<8?'var(--g)':'var(--a)';staff($('kst'),r);if(osc)osc.frequency.value=f;}
+$('kr').oninput=knob;knob();
+$('kp').onclick=()=>{try{if(on){osc.stop();osc=null;on=false;$('kp').textContent='▶ Послушать звук';return}
+ ac=ac||new (window.AudioContext||window.webkitAudioContext)();osc=ac.createOscillator();const g=ac.createGain();g.gain.value=.15;osc.connect(g);g.connect(ac.destination);osc.start();on=true;knob();$('kp').textContent='■ Стоп'}catch(e){$('kp').textContent='Звук недоступен'}};
+// слайд 5: код
+const CODE=[['detect()',`function detect(buf, sr){
+  // громкость сигнала
+  let rms = Math.sqrt(sum(v*v) / buf.length);
+  if (rms < 0.012) return -1;  // тишина
+  for (lag = minLag; lag <= maxLag; lag++)
+    c[lag] = sum(buf[i] * buf[i + lag]);
+  return sr / bestLag;  // частота в Гц
+}`],['нота',`const m = 69 + 12 * Math.log2(f / 440);  // номер ноты
+const r = Math.round(m);                 // ближайшая нота
+const cents = (m - r) * 100;             // насколько фальшиво
+nameL.textContent = NAMES[r % 12];`],['нотный стан',`const dn  = oct * 7 + DIA[pc];  // номер ступени
+const pos = dn - 30;             // от нижней линейки
+const y   = b - pos * h;         // высота ноты
+drawNote(x, y);                  // рисуем нотную головку`]];
+const esc=t=>t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function hl(l){return l.replace(/(\/\/.*$)|('[^']*')|\b(function|const|let|if|for|return)\b|([&<>])/g,(m,a,b,c,d)=>a?`<span class="cm">${esc(a)}</span>`:b?`<span class="s">${esc(b)}</span>`:c?`<span class="k">${c}</span>`:esc(d))}
+function showCode(i){$('cf').textContent='index.html · '+CODE[i][0];[...$('ct').children].forEach((b,j)=>b.className=j==i?'on2':'');
+ $('cd').innerHTML=CODE[i][1].split('\n').map((l,j)=>`<span class="ln" style="--i:${j}">${hl(l)||' '}</span>`).join('')}
+CODE.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c[0];b.onclick=()=>showCode(i);$('ct').appendChild(b)});showCode(0);
+// слайд 6: викторина
+let tg,ok=0,all=0,lk=false;
+function nq(){tg=12*(4+Math.floor(Math.random()*2)+1)+NT[Math.floor(Math.random()*7)];lk=false;staff($('qst'),tg);$('qm').textContent=''}
+NN.forEach((n,i)=>{const b=document.createElement('button');b.textContent=n;b.onclick=()=>{if(lk)return;lk=true;all++;const g=NT[i]==tg%12;if(g)ok++;
+ $('qm').style.color=g?'var(--g)':'var(--r)';$('qm').textContent=g?'Верно! 🎉':'Не то, это '+NM[tg%12];$('qs').textContent=' Счёт: '+ok+' из '+all;setTimeout(nq,1200)};$('qk').appendChild(b)});nq();
+// навигация
+const S=[...document.querySelectorAll('.slide')];let cur=-1;
+function counts(){document.querySelectorAll('.num').forEach(e=>{const t=+e.dataset.t;let v=0;e.textContent=0;if(!t)return;const id=setInterval(()=>{e.textContent=++v;if(v>=t)clearInterval(id)},90)})}
+function go(n){n=Math.max(0,Math.min(S.length-1,n));if(n===cur)return;cur=n;
+ S.forEach((s,i)=>{s.className='slide'+(i==n?' on':i<n?' past':'')});
+ $('ct2').textContent=(n+1)+' / '+S.length;$('prog').style.width=((n+1)/S.length*100)+'%';
+ if(n==4)showCode(0);if(n==6)counts();
+ try{history.replaceState(null,'','#s'+(n+1))}catch(e){}}
+$('nx').onclick=()=>go(cur+1);$('pv').onclick=()=>go(cur-1);
+document.addEventListener('keydown',e=>{if(e.target.isContentEditable)return;if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(cur+1)}if(['ArrowLeft','PageUp'].includes(e.key))go(cur-1)});
+let tx=null;document.addEventListener('touchstart',e=>{tx=e.target.closest('input,button,summary,pre,[contenteditable]')?null:e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>60)go(cur+(d<0?1:-1));tx=null},{passive:true});
+let st=0;try{const m=/^#s(\d+)$/.exec(location.hash);if(m)st=+m[1]-1}catch(e){}go(st);
+</script>
+</body>
+</html>
